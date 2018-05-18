@@ -1,0 +1,182 @@
+#!/usr/bin/env python
+# Software License Agreement (BSD License)
+#
+# Copyright (c) 2009, Willow Garage, Inc.
+# Copyright (c) 2018, Synapticon GmbH
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above
+#    copyright notice, this list of conditions and the following
+#    disclaimer in the documentation and/or other materials provided
+#    with the distribution.
+#  * Neither the name of Willow Garage, Inc. nor the names of its
+#    contributors may be used to endorse or promote products derived
+#    from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+"""Interactive GUI-based service server.
+
+Based on actionlib/axserver.py.
+"""
+
+from __future__ import with_statement
+
+import argparse
+import roslib
+import roslib.packages
+import roslib.message
+import wx
+import rospy
+import threading
+from cStringIO import StringIO
+
+from rx_service_tools.dynamic_service import DynamicService
+from rx_service_tools.yaml_utils import to_yaml, yaml_msg_str
+
+RESPOND = 1
+
+
+class SXServerApp(wx.App):
+    """WX GUI for an interactive service server."""
+
+    def __init__(self, service_type, service_name):
+        """Initialize."""
+        self.service_type = service_type
+        wx.App.__init__(self)
+
+        self.server = rospy.Service(service_name, self.service_type.base,
+                                    self.execute)
+        self.condition = threading.Condition()
+        self.response_msg = None
+
+    def set_request(self, goal):
+        """Write the request message to the GUI."""
+        if goal is None:
+            self.status_bg.SetBackgroundColour(wx.Colour(200, 0, 0))
+            self.status.SetLabel("Waiting For Request...")
+
+            self.request.SetValue("")
+
+        else:
+            self.status_bg.SetBackgroundColour(wx.Colour(0, 200, 0))
+            self.status.SetLabel(
+                "Received Request.  Send Response.")
+
+            try:
+                self.request.SetValue(to_yaml(goal))
+            except UnicodeDecodeError:
+                self.request.SetValue(
+                    "Cannot display goal due to unprintable characters")
+
+    def execute(self, req):
+        """Service callback waiting for user input."""
+        wx.CallAfter(self.set_request, req)
+        self.condition.acquire()
+
+        self.response_msg = None
+        self.execute_type = None
+
+        while self.execute_type != RESPOND:
+            if rospy.is_shutdown():
+                return
+            self.condition.wait(1.0)
+
+        wx.CallAfter(self.set_request, None)
+
+        self.condition.release()
+
+        return self.response_msg
+
+    def on_respond(self, event):
+        """Callback of the "RESPOND" button."""
+        self.condition.acquire()
+
+        try:
+            self.response_msg = yaml_msg_str(self.service_type.response,
+                                             self.response.GetValue())
+            buff = StringIO()
+            self.response_msg.serialize(buff)
+
+            self.execute_type = RESPOND
+            self.condition.notify()
+        except roslib.message.SerializationError as e:
+            self.feedback_msg = None
+            wx.MessageBox(str(e), "Error serializing response", wx.OK)
+
+        self.condition.release()
+
+    def OnInit(self):
+        """Initialize the GUI."""
+        self.frame = wx.Frame(None, -1, self.service_type.name + ' Standin')
+
+        self.sz = wx.BoxSizer(wx.VERTICAL)
+
+        tmp_response = self.service_type.response()
+
+        self.request = wx.TextCtrl(self.frame, -1, style=(wx.TE_MULTILINE |
+                                                          wx.TE_READONLY))
+        self.request_st_bx = wx.StaticBox(self.frame, -1, "Request")
+        self.request_st = wx.StaticBoxSizer(self.request_st_bx, wx.VERTICAL)
+        self.request_st.Add(self.request, 1, wx.EXPAND)
+
+        self.response = wx.TextCtrl(self.frame, -1, style=wx.TE_MULTILINE)
+        self.response.SetValue(to_yaml(tmp_response))
+        self.response_st_bx = wx.StaticBox(self.frame, -1, "Response")
+        self.response_st = wx.StaticBoxSizer(self.response_st_bx, wx.VERTICAL)
+        self.response_st.Add(self.response, 1, wx.EXPAND)
+
+        self.respond = wx.Button(self.frame, -1, label="RESPOND")
+        self.respond.Bind(wx.EVT_BUTTON, self.on_respond)
+
+        self.status_bg = wx.Panel(self.frame, -1)
+        self.status_bg.SetBackgroundColour(wx.Colour(200, 0, 0))
+        self.status = wx.StaticText(self.status_bg, -1,
+                                    label="Waiting For Request...")
+
+        self.sz.Add(self.request_st, 1, wx.EXPAND)
+        self.sz.Add(self.response_st, 1, wx.EXPAND)
+        self.sz.Add(self.respond, 0, wx.EXPAND)
+        self.sz.Add(self.status_bg, 0, wx.EXPAND)
+
+        self.frame.SetSizer(self.sz)
+
+        self.set_request(None)
+
+        self.sz.Layout()
+        self.frame.Show()
+
+        return True
+
+
+if __name__ == '__main__':
+    rospy.init_node('axserver', anonymous=True)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("service_name", type=str,
+                        help="Name of the service.")
+    parser.add_argument("service_type", type=str,
+                        help="Type of the service (e.g. 'std_srvs/SetBool')")
+    args = parser.parse_args()
+
+    service = DynamicService(args.service_type)
+
+    app = SXServerApp(service, args.service_name)
+    app.MainLoop()
+    rospy.signal_shutdown('GUI shutdown')

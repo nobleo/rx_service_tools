@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>rx_service_tools</name>
+  <version>1.0.0</version>
+  <description>Graphical tools to interact with ROS services.</description>
+
+  <maintainer email="ahosseini@synapticon.com">Alireza Hosseini</maintainer>
+  <maintainer email="fwidmaier@synapticon.com">Felix Widmaier</maintainer>
+
+  <license>BSD</license>
+
+  <author email="support@synapticon.com">Synapticon GmbH</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <exec_depend>roslib</exec_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>wxpython</exec_depend>
+  <exec_depend>python-argparse</exec_depend>
+  <exec_depend>python-yaml</exec_depend>
+
+  <export>
+  </export>
+</package>
