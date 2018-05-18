@@ -9,6 +9,7 @@
 
   <license>BSD</license>
 
+  <url type="repository">https://github.com/synapticon/rx_service_tools</url>
   <author email="support@synapticon.com">Synapticon GmbH</author>
 
   <buildtool_depend>catkin</buildtool_depend>
