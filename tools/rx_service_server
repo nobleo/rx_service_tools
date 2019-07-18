@@ -173,7 +173,7 @@ if __name__ == '__main__':
                         help="Name of the service.")
     parser.add_argument("service_type", type=str,
                         help="Type of the service (e.g. 'std_srvs/SetBool')")
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
 
     service = DynamicService(args.service_type)
 
