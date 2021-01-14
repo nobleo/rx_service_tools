@@ -4,13 +4,13 @@
   <version>1.0.0</version>
   <description>Graphical tools to interact with ROS services.</description>
 
-  <maintainer email="ahosseini@synapticon.com">Alireza Hosseini</maintainer>
-  <maintainer email="fwidmaier@synapticon.com">Felix Widmaier</maintainer>
+  <maintainer email="tim.clephas@nobleo.nl">Tim Clephas</maintainer>
+  <author email="ahosseini@synapticon.com">Alireza Hosseini</author>
+  <author email="fwidmaier@synapticon.com">Felix Widmaier</author>
 
   <license>BSD</license>
 
-  <url type="repository">https://github.com/synapticon/rx_service_tools</url>
-  <author email="support@synapticon.com">Synapticon GmbH</author>
+  <url type="repository">https://github.com/nobleo/rx_service_tools</url>
 
   <buildtool_depend>catkin</buildtool_depend>
   <exec_depend>roslib</exec_depend>
