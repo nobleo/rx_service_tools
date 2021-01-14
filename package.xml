@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>rx_service_tools</name>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
   <description>Graphical tools to interact with ROS services.</description>
 
   <maintainer email="tim.clephas@nobleo.nl">Tim Clephas</maintainer>

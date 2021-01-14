@@ -2,8 +2,8 @@
 Changelog for package rx_service_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.1 (2021-01-14)
+------------------
 * Roslaunch compatible by allowing unkown arguments (`#1 <https://github.com/nobleo/rx_service_tools/issues/1>`_)
   Only parse known arguments as roslaunch tends to add arguments like __name:= and __log:=
 * feat: Interactive service server GUI
