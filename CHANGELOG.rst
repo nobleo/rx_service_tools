@@ -2,6 +2,10 @@
 Changelog for package rx_service_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Noetic migration using roscompile
+
 1.0.1 (2021-01-14)
 ------------------
 * Roslaunch compatible by allowing unkown arguments (`#1 <https://github.com/nobleo/rx_service_tools/issues/1>`_)
