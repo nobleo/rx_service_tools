@@ -2,8 +2,8 @@
 Changelog for package rx_service_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.2 (2021-01-27)
+------------------
 * Noetic migration using roscompile
 
 1.0.1 (2021-01-14)
