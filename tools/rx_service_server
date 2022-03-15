@@ -39,14 +39,14 @@ Based on actionlib/axserver.py.
 from __future__ import with_statement
 
 import argparse
-import roslib
-import roslib.packages
-import roslib.message
-import wx
-import rospy
 import threading
-from cStringIO import StringIO
+from io import BytesIO  # for handling byte strings
 
+import roslib
+import roslib.message
+import roslib.packages
+import rospy
+import wx
 from rx_service_tools.dynamic_service import DynamicService
 from rx_service_tools.yaml_utils import to_yaml, yaml_msg_str
 
@@ -111,7 +111,7 @@ class SXServerApp(wx.App):
         try:
             self.response_msg = yaml_msg_str(self.service_type.response,
                                              self.response.GetValue())
-            buff = StringIO()
+            buff = BytesIO()
             self.response_msg.serialize(buff)
 
             self.execute_type = RESPOND
